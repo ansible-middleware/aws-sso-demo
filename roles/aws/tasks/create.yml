@@ -1,0 +1,196 @@
+---
+- name: Find RHEL8 AMIs
+  ec2_ami_info:
+    region: "{{ item }}"
+    filters:
+      name: RHEL-8.5.0_HVM-*
+      architecture: x86_64
+      root-device-type: ebs
+      virtualization-type: hvm
+  loop: "{{ vpc | list }}"
+  register: rhel8_amis
+
+- name: Select latest RHEL8 AMI
+  set_fact:
+    latest_ami: >-
+      {{ latest_ami | default({}) 
+          | combine( { item.invocation.module_args.region: 
+            item.images
+              | sort(attribute='creation_date')
+              | map(attribute='image_id')
+              | list
+              | last 
+          })
+      }}
+  loop: "{{ rhel8_amis.results }}"
+
+- set_fact:
+    vpc_result: "{{ vpc }}"
+
+- name: Create VPC, subnet and SG for each region
+  loop: "{{ vpc | dict2items }}"
+  include_tasks: vpc.yml
+  vars:
+    region: "{{ item.key }}"
+    vpc_data: "{{ item.value }}"
+
+# TODO the VPC peering/routes does not scale to 3+ regions
+- name: Create VPC peering
+  ec2_vpc_peer:
+    region: "{{ vpc_result | list | first }}"
+    vpc_id: "{{ (vpc_result | dict2items | first).value.vpc_id }}"
+    peer_region: "{{ vpc_result | list | last }}"
+    peer_vpc_id: "{{ (vpc_result | dict2items | last).value.vpc_id }}"
+    tags: "{{ resource_tags }}"
+  register: created_peering
+
+- name: Route table for peering
+  ec2_vpc_route_table:
+    vpc_id: "{{ (vpc_result | dict2items | first).value.vpc_id }}"
+    region: "{{ vpc_result | list | first }}"
+    subnets: "{{ (vpc_result | dict2items | first).value.subnets | list }}"
+    purge_routes: False
+    routes:
+      - dest: "{{ (vpc_result | dict2items | last).value.cidr_block }}"
+        vpc_peering_connection_id: "{{ created_peering.peering_id }}"
+    tags: "{{ resource_tags }}"
+
+- name: Reverse route table for peering
+  ec2_vpc_route_table:
+    vpc_id: "{{ (vpc_result | dict2items | last).value.vpc_id }}"
+    region: "{{ vpc_result | list | last }}"
+    subnets: "{{ (vpc_result | dict2items | last).value.subnets | list }}"
+    purge_routes: False
+    routes:
+      - dest: "{{ (vpc_result | dict2items | first).value.cidr_block }}"
+        vpc_peering_connection_id: "{{ created_peering.peering_id }}"
+    tags: "{{ resource_tags }}"
+
+# - name: Create a private DNS zone
+#   azure.azcollection.azure_rm_privatednszone:
+#     resource_group: "{{ item.name }}"
+#     name: "{{ privatednszone }}"
+#   loop: "{{ resource_groups }}"
+
+# - name: Update virtual network link
+#   azure.azcollection.azure_rm_privatednszonelink:
+#     resource_group: "{{ item.name }}"
+#     name: vn_ansible_middileware_link
+#     zone_name: "{{ privatednszone }}"
+#     virtual_network: "{{ virtualnetwork_name }}"
+#     registration_enabled: yes
+#     state: present
+#   loop: "{{ resource_groups }}"
+
+# - name: Create public IP address for VM's
+#   azure_rm_publicipaddress:
+#     resource_group: "{{ item.resourcegroup_name }}"
+#     allocation_method: Static
+#     name: "{{ item.name }}-ip"
+#     domain_name: "{{ item.domain_name | default(omit)}}"
+#   loop: "{{ vm }}"
+
+# - name: Create Virtual Machine
+#   azure_rm_virtualmachine:
+#     resource_group: "{{ item.resourcegroup_name }}"
+#     name: "{{ item.name }}"
+#     admin_username: "{{ admin_username }}"
+#     admin_password: "{{ admin_password }}"
+#     network_interface_names: "{{ item.name }}"
+#     ssh_public_keys:
+#     - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
+#       key_data: "{{ ssh_key_path }}"
+#     vm_size: "{{ vm_size }}"
+#     tags:
+#       site: "{{ item.site | default(None) }}"
+#       role: "{{ item.role | default(None)}}"
+#     image:
+#       offer: "{{ offer }}"
+#       publisher: "{{ publisher }}"
+#       sku: "{{ sku }}"
+#       version: "{{ image_version }}"
+#   loop: "{{ vm }}"
+
+- name: Create EC2 instances for services
+  include_tasks: instance.yml
+  loop: "{{ vm }}"
+
+- name: Create EC2 instances for unmanaged mariadb database
+  when: not managed_mariadb
+  include_tasks: instance.yml
+  loop: "{{ db_vm }}"
+
+# - name: Install, configure and managed mariadb database
+#   block:
+#     - name: Create MariaDB server instances
+#       azure_rm_mariadbserver:
+#         resource_group: "{{ item.resourcegroup_name }}"
+#         name: "{{ item.name }}"
+#         sku:
+#           name: "{{ db_sku_name }}"
+#           tier: "{{ db_sku_tier }}"
+#         location: "{{ item.resourcegroup_location }}"
+#         storage_mb: "{{ db_storage_mb }}"
+#         # enforce_ssl: "{{ db_enforce_ssl }}"
+#         version: "{{ db_version }}"
+#         admin_username: "{{ db_admin_username }}"
+#         admin_password: "{{ db_admin_password }}"
+#         tags:
+#           site: "{{ item.site | default(None) }}"
+#           role: "{{ item.role | default(None)}}"
+#       loop: "{{ db }}"
+
+#     - name: Create MariaDB firewall rule
+#       azure_rm_mariadbfirewallrule:
+#         resource_group: "{{ item.resourcegroup_name }}"
+#         server_name: "{{ item.name }}"
+#         name: "{{ item.name }}-rule"
+#         start_ip_address: "{{ item.start_ip_address }}"
+#         end_ip_address: "{{ item.end_ip_address }}"
+#       loop: "{{ db }}"
+
+#     - name: Create keycloak Database
+#       azure_rm_mariadbdatabase:
+#         resource_group: "{{ item.resourcegroup_name }}"
+#         server_name: "{{ item.name }}"
+#         name: "{{ item.database }}"
+#         charset: "utf8"
+#         force_update: true
+#       loop: "{{ db }}"
+#   when: managed_mariadb
+
+# - name: Create a DNS zone
+#   azure_rm_dnszone:
+#     resource_group: "{{ item.name }}"
+#     name: "{{ dns_name }}"
+#   loop: "{{ resource_groups }}"
+
+# - name: Create a traffic manager profile
+#   azure.azcollection.azure_rm_trafficmanager:
+#     name: "{{ traffic_manager_name }}"
+#     resource_group: "{{ traffic_manager_resource_group }}"
+#     profile_status: "{{ profile_status }}"
+#     dns_config:
+#       relative_name: "{{ traffic_manager_name }}"
+#       ttl: "{{ ttl }}"
+#     monitor_config:
+#       protocol: "{{ protocol }}"
+#       port: "{{ port }}"
+#       path: "{{ path }}"
+#       timeout_in_seconds: "{{ timeout_in_seconds }}"
+#       interval_in_seconds: "{{ interval_in_seconds }}"
+#       tolerated_number_of_failures: "{{ tolerated_number_of_failures }}"
+#     endpoints: "{{ tm.value }}"
+#   loop: "{{ traffic_manager.groups | dict2items }}"
+#   loop_control:
+#     loop_var: tm
+
+# - name: Link public DNS to Traffic Manager.
+#   azure_rm_dnsrecordset:
+#     resource_group: "{{ item.name }}"
+#     relative_name: "{{ relative_name }}"
+#     zone_name: "{{ dns_name }}"
+#     record_type: "{{ record_type }}"
+#     records:
+#       - entry: "{{ entry }}"
+#   loop: "{{ resource_groups }}"

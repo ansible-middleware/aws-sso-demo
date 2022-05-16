@@ -1,0 +1,1 @@
+- import_playbook: cross-dc-rhsso-demo/playbooks/all.yml

@@ -1,31 +1,29 @@
-- name: Create Azure VM
+- name: Create AWS VMs
   hosts: localhost
   gather_facts: false
   connection: local
   vars:
     repo_url: "https://github.com/ansible-middleware/cross-dc-rhsso-demo.git"
-    branch: azure
+    branch: aws
   tasks:
     - name: Git checkout
       ansible.builtin.git:
         repo: "{{ repo_url }}"
         dest: "{{ playbook_dir }}/cross-dc-rhsso-demo"
         version: "{{ branch }}"
+        depth: 1
         single_branch: yes
         clone: yes
         update: yes
 
-    - name: Create demo resources on azure.
+    - name: Create demo resources on aws
       include_role:
-        name: 'azure'
+        name: 'aws'
       vars:
-        ssh_key_path: "{{ ssh_key | default(lookup('env', 'HOME') + '/.ssh/id_rsa.pub')}}"
-        dns_name: "azuredemos.ansiblemiddleware.com" # This is optional
+        ssh_key_path: "{{ ssh_key | default(lookup('env', 'HOME') + '/.ssh/id_rsa')}}"
+        dns_name: "awsdemos.ansiblemiddleware.com" # This is optional
         managed_mariadb: false
     
-    - meta: refresh_inventory
-    - pause:
-        minutes: 1
-
-- name: Run cross-dc-rhsso-demo
-  import_playbook: cross-dc-rhsso-demo/playbooks/all.yml
+    # - meta: refresh_inventory
+    # - pause:
+    #     minutes: 1

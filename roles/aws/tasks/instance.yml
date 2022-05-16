@@ -1,0 +1,24 @@
+---
+- name: "Query for existing running instance: {{ item.name }}"
+  ec2_instance_info:
+    region: "{{ item.region }}"
+    filters:
+      "tag:Name": "{{ item.name }}"
+      instance-state-name: [ "running", "pending" ]
+  register: instance
+
+- name: "Create EC2 instance: {{ item.name }}"
+  ec2_instance:
+    region: "{{ item.region }}"
+    name: "{{ item.name }}"
+    instance_ids: "{{ item.name }}"
+    instance_type: "{{ item.type | default('t2.micro') }}"
+    vpc_subnet_id: "{{ vpc_result[item.region].subnets[item.subnet].subnet_id }}"
+    key_name: "{{ ssh_key_name }}"
+    security_group: "{{ vpc_result[item.region].name }}-{{ item.role }}"
+    tags: "{{ resource_tags | combine( { 'Role': item.role } ) }}"
+    image_id: "{{ latest_ami[item.region] }}"
+    termination_protection: False
+  retries: 3
+  delay: 5  
+  when: instance.instances | length == 0

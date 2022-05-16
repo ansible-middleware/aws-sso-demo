@@ -1,0 +1,246 @@
+---
+virtualnetwork_name: ansible-middileware-vn
+subnet_name: ansible-middileware-subnet
+securitygroup_name: ansible-middileware-sg
+admin_username: ec2user 
+admin_password: Password12345
+offer: RHEL
+publisher: RedHat
+sku: 8-LVM
+image_version: "latest"
+vm_size: "Standard_D2s_v3"
+publicIP: ansible-middileware-ip
+public_ip_address_name: ansible-middileware-public-ip
+domain_name: "rhsso"
+privatednszone: "internal.ansiblemiddleware.com"
+vn_peering_name: "eastus-centralus-peering"
+allow_virtual_network_access: true
+allow_forwarded_traffic: true
+# Traffic Manager info
+traffic_manager:
+      groups:
+        endpoints:
+        - name: site1
+          type: "Microsoft.Network/trafficManagerProfiles/azureEndpoints"
+          endpoint_status: Enabled
+          target_resource_id : "/subscriptions/fcb01633-9799-4410-9ec8-f632c867b0f3/resourceGroups/ansible-middileware-eastus-rg/providers/Microsoft.Network/publicIPAddresses/site1-loadbalancer-ip"
+        - name: site2
+          type: "Microsoft.Network/trafficManagerProfiles/azureEndpoints"
+          endpoint_status: Enabled
+          target_resource_id : "/subscriptions/fcb01633-9799-4410-9ec8-f632c867b0f3/resourceGroups/ansible-middileware-centralus-rg/providers/Microsoft.Network/publicIPAddresses/site2-loadbalancer-ip"
+traffic_manager_name: rhsso-ansible-middleware
+traffic_manager_resource_group: ansible-middileware-eastus-rg
+profile_status: Enabled
+traffic_manager_relative_name: rhsso-ansible-middleware
+ttl: 60
+protocol: HTTPS
+port: 443
+path: '/'
+timeout_in_seconds: 10
+interval_in_seconds: 30
+tolerated_number_of_failures: 3
+#Link public DNS to loadbalancr
+relative_name: "rhsso"
+record_type: "CNAME"
+entry: "rhsso-ansible-middleware.trafficmanager.net"
+dns_name: "awsdemos.ansiblemiddleware.com"
+loadbalancer_ip: "loadbalancer0-ip"
+# vpc with subnet per region
+vpc:
+  us-east-1:
+    name: crossdc-rhsso-east-1
+    cidr_block: "10.0.1.0/26"
+    subnets:
+      "10.0.1.0/28":
+        az: us-east-1e
+      "10.0.1.16/28":
+        az: us-east-1e
+      "10.0.1.32/28":
+        az: us-east-1e
+  us-west-2:
+    name: crossdc-rhsso-west-2
+    cidr_block: "10.0.2.0/26"
+    subnets:
+      "10.0.2.0/28":
+        az: us-west-2c
+      "10.0.2.16/28":
+        az: us-west-2c
+      "10.0.2.32/28":
+        az: us-west-2c
+security_groups:
+    - name: loadbalancer
+      description: Ingress rules for loadbalancer
+      rules:
+        - rule_desc: 'ssh'
+          from_port: '22'
+          to_port: '22'
+          proto: tcp
+          cidr_ip: 0.0.0.0/0
+        - rule_desc: https
+          from_port: '443'
+          to_port: '443'
+          proto: tcp
+          cidr_ip: 0.0.0.0/0
+        - rule_desc: modcluster
+          from_port: '6666'
+          to_port: '6666'
+          proto: tcp
+          cidr_ip: 10.0.0.0/16
+    - name: datagrid
+      description: Ingress rules for DataGrid
+      rules:
+        - rule_desc: 'ssh'
+          from_port: '22'
+          to_port: '22'
+          proto: tcp
+          cidr_ip: 0.0.0.0/0
+        - rule_desc: 'jgroups - DataGrid'
+          from_port: '7800'
+          to_port: '7801'
+          proto: tcp
+          cidr_ip: 10.0.0.0/16
+        - rule_desc: 'rest - DataGrid'
+          from_port: '11222'
+          to_port: '11222'
+          proto: tcp
+          cidr_ip: 10.0.0.0/16          
+    - name: rhsso
+      description: Ingress rules for Single Sign-on
+      rules:
+        - rule_desc: 'ssh'
+          from_port: '22'
+          to_port: '22'
+          proto: tcp
+          cidr_ip: 0.0.0.0/0
+        - rule_desc: 'http - Single Sign-on'
+          from_port: '8080'
+          to_port: '8080'
+          proto: tcp
+          cidr_ip: 10.0.0.0/16
+        - rule_desc: 'ajp - Single Sign-on'
+          from_port: '8009'
+          to_port: '8009'
+          proto: tcp
+          cidr_ip: 10.0.0.0/16
+        - rule_desc: 'jgroups - Single Sign-on'
+          from_port: '7600'
+          to_port: '7601'
+          proto: tcp
+          cidr_ip: 10.0.0.0/16
+    - name: database
+      description: Ingress rules for MariaDB
+      rules:
+        - rule_desc: 'ssh'
+          from_port: '22'
+          to_port: '22'
+          proto: tcp
+          cidr_ip: 0.0.0.0/0
+        - rule_desc: 'mariadb'
+          from_port: '3306'
+          to_port: '3306'
+          proto: tcp
+          cidr_ip: 10.0.0.0/16
+        - rule_desc: 'state-transfer - mariadb'
+          from_port: '4444'
+          to_port: '4444'
+          proto: tcp
+          cidr_ip: 10.0.0.0/16          
+        - rule_desc: 'wsrep - mariadb'
+          from_port: '4567'
+          to_port: '4567'
+          proto: tcp
+          cidr_ip: 10.0.0.0/16
+
+vm:
+  - name: 'site1-loadbalancer'
+    site: 'site1'
+    role: 'loadbalancer'
+    region: us-east-1
+    subnet: "10.0.1.0/28"
+    domain_name: 'rhsso'
+  - name: 'site2-loadbalancer'
+    site: 'site2'
+    role: 'loadbalancer'
+    region: us-west-2
+    subnet: "10.0.2.0/28"
+    domain_name: 'rhsso'
+  - name: 'site1-datagrid1'
+    site: 'site1'
+    role: 'datagrid'
+    region: us-east-1
+    subnet: "10.0.1.16/28"
+  - name: 'site1-datagrid2'
+    site: 'site1'
+    role: 'datagrid'
+    region: us-east-1
+    subnet: "10.0.1.16/28"
+  - name: 'site2-datagrid1'
+    site: 'site2'
+    role: 'datagrid'
+    region: us-west-2
+    subnet: "10.0.2.16/28"
+  - name: 'site2-datagrid2'
+    site: 'site2'
+    role: 'datagrid'
+    region: us-west-2
+    subnet: "10.0.2.16/28"
+  - name: 'site1-rhsso1'
+    site: 'site1'
+    role: 'rhsso'
+    region: us-east-1
+    subnet: "10.0.1.16/28"
+  - name: 'site1-rhsso2'
+    site: 'site1'
+    role: 'rhsso'
+    region: us-east-1
+    subnet: "10.0.1.16/28"
+  - name: 'site2-rhsso1'
+    site: 'site2'
+    role: 'rhsso'
+    region: us-west-2
+    subnet: "10.0.2.16/28"
+  - name: 'site2-rhsso2'
+    site: 'site2'
+    role: 'rhsso'
+    region: us-west-2
+    subnet: "10.0.2.16/28"
+db_vm:
+  - name: 'site1-database1'
+    site: 'site1'
+    region: us-east-1
+    role: 'database'
+    subnet: "10.0.1.32/28"
+  - name: 'site1-database2'
+    site: 'site1' 
+    role: 'database'
+    region: us-east-1
+    subnet: "10.0.1.32/28"
+  - name: 'site2-database1'
+    site: 'site2' 
+    role: 'database'
+    region: us-west-2
+    subnet: "10.0.2.32/28"
+db:
+  - name: 'site1-database1'
+    site: 'site1'
+    role: 'database'
+    resourcegroup_name: ansible-middileware-eastus-rg
+    resourcegroup_location: eastus
+    start_ip_address: '0.0.0.0'
+    end_ip_address: '255.255.255.255'
+    database: keycloak
+db_sku_name: 'B_Gen5_2'
+db_sku_tier: 'Basic'
+db_storage_mb: '5120'
+db_enforce_ssl: True
+db_version: '10.2'
+db_admin_username: 'keycloak-user'
+db_admin_password: 'redhat1!'
+
+
+resource_tags:
+  Environment: crossdc-rhsso-demo
+  Application: rhsso
+  Created-By: ansible
+
+ssh_key_name: guido
