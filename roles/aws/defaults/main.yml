@@ -189,25 +189,25 @@ vm:
     role: 'rhsso'
     region: us-east-1
     subnet: "10.0.1.16/28"
-    type: 't3a.small'
+    type: 't2.small'
   - name: 'site1-rhsso2'
     site: 'site1'
     role: 'rhsso'
     region: us-east-1
     subnet: "10.0.1.16/28"
-    type: 't3a.small'
+    type: 't2.small'
   - name: 'site2-rhsso1'
     site: 'site2'
     role: 'rhsso'
     region: us-west-2
     subnet: "10.0.2.16/28"
-    type: 't3a.small'
+    type: 't2.small'
   - name: 'site2-rhsso2'
     site: 'site2'
     role: 'rhsso'
     region: us-west-2
     subnet: "10.0.2.16/28"
-    type: 't3a.small'
+    type: 't2.small'
 db_vm:
   - name: 'site1-database1'
     site: 'site1'

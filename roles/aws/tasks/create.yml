@@ -138,3 +138,11 @@
 #         force_update: true
 #       loop: "{{ db }}"
 #   when: managed_mariadb
+
+- name: "Report of generated networking"
+  debug:
+    var: vpc_result
+
+- name: "Report of generated instances"
+  debug:
+    var: vm_result
