@@ -249,4 +249,4 @@ resource_tags:
 
 ssh_key_name: guido
 
-ttl: 120
+ttl: 60

@@ -9,6 +9,9 @@
   loop: "{{ vpc | list }}"
 
 - debug:
+    var: instances
+
+- debug:
     msg: "{{ instances | community.general.json_query(querystr) | flatten }}"
   loop: "{{ vpc | list }}"
   vars:
@@ -22,5 +25,27 @@
   retries: 3
   delay: 5
   loop: "{{ vpc | list }}"
+  when: instances | community.general.json_query(querystr) | flatten | length > 0
   vars:
     querystr: "results[*].instances[?contains(placement.availability_zone, '{{ item }}')].instance_id"
+
+- name: Retrieve details for instance DNS record
+  community.aws.route53:
+    state: get
+    zone: "{{ privatednszone }}"
+    private_zone: yes
+    record: "{{ item.name }}.{{ privatednszone }}"
+    type: A
+  register: rec
+  loop: "{{ vm }}"
+
+- name: "Delete instance A record {{ item.set.record }} {{ item.set.value }}"
+  community.aws.route53:
+    state: absent
+    zone: "{{ privatednszone }}"
+    private_zone: yes
+    record: "{{ item.set.record }}"
+    ttl: "{{ item.set.ttl }}"
+    type: "{{ item.set.type }}"
+    value: "{{ item.set.value }}"
+  loop: "{{ rec.results }}"

@@ -138,9 +138,3 @@
 #         force_update: true
 #       loop: "{{ db }}"
 #   when: managed_mariadb
-
-# - name: Create a DNS zone
-#   azure_rm_dnszone:
-#     resource_group: "{{ item.name }}"
-#     name: "{{ dns_name }}"
-#   loop: "{{ resource_groups }}"
