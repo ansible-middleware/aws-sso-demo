@@ -12,7 +12,7 @@
     region: "{{ instance.region }}"
     name: "{{ instance.name }}"
     instance_ids: "{{ instance.name }}"
-    instance_type: "{{ instance.type | default('t2.micro') }}"
+    instance_type: "{{ instance.type | default('t3a.micro') }}"
     vpc_subnet_id: "{{ vpc_result[instance.region].subnets[instance.subnet].subnet_id }}"
     key_name: "{{ ssh_key_name }}"
     security_group: "{{ vpc_result[instance.region].name }}-{{ instance.role }}"

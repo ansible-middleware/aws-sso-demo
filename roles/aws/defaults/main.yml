@@ -47,11 +47,16 @@ security_groups:
           to_port: '443'
           proto: tcp
           cidr_ip: 0.0.0.0/0
-        - rule_desc: modcluster
+        - rule_desc: "modcluster - site1"
           from_port: '6666'
           to_port: '6666'
           proto: tcp
-          cidr_ip: 10.0.0.0/16
+          cidr_ip: 10.0.1.16/28
+        - rule_desc: "modcluster - site2"
+          from_port: '6666'
+          to_port: '6666'
+          proto: tcp
+          cidr_ip: 10.0.2.16/28
     - name: datagrid
       description: Ingress rules for DataGrid
       rules:
@@ -60,16 +65,26 @@ security_groups:
           to_port: '22'
           proto: tcp
           cidr_ip: 0.0.0.0/0
-        - rule_desc: 'jgroups - DataGrid'
+        - rule_desc: 'jgroups - site1 - DataGrid'
           from_port: '7800'
           to_port: '7801'
           proto: tcp
-          cidr_ip: 10.0.0.0/16
-        - rule_desc: 'rest - DataGrid'
+          cidr_ip: 10.0.1.16/28
+        - rule_desc: 'jgroups - site2 - DataGrid'
+          from_port: '7800'
+          to_port: '7801'
+          proto: tcp
+          cidr_ip: 10.0.2.16/28
+        - rule_desc: 'rest - site1 - DataGrid'
           from_port: '11222'
           to_port: '11222'
           proto: tcp
-          cidr_ip: 10.0.0.0/16          
+          cidr_ip: 10.0.1.16/28
+        - rule_desc: 'rest - site2- DataGrid'
+          from_port: '11222'
+          to_port: '11222'
+          proto: tcp
+          cidr_ip: 10.0.2.16/28
     - name: rhsso
       description: Ingress rules for Single Sign-on
       rules:
@@ -88,11 +103,16 @@ security_groups:
           to_port: '8009'
           proto: tcp
           cidr_ip: 10.0.0.0/16
-        - rule_desc: 'jgroups - Single Sign-on'
+        - rule_desc: 'jgroups - site1 - Single Sign-on'
           from_port: '7600'
           to_port: '7601'
           proto: tcp
-          cidr_ip: 10.0.0.0/16
+          cidr_ip: 10.0.1.16/28
+        - rule_desc: 'jgroups - site2 - Single Sign-on'
+          from_port: '7600'
+          to_port: '7601'
+          proto: tcp
+          cidr_ip: 10.0.2.16/28
     - name: database
       description: Ingress rules for MariaDB
       rules:
@@ -101,22 +121,36 @@ security_groups:
           to_port: '22'
           proto: tcp
           cidr_ip: 0.0.0.0/0
-        - rule_desc: 'mariadb'
+        - rule_desc: 'mariadb - site1'
           from_port: '3306'
           to_port: '3306'
           proto: tcp
-          cidr_ip: 10.0.0.0/16
-        - rule_desc: 'state-transfer - mariadb'
+          cidr_ip: 10.0.1.16/28
+        - rule_desc: 'mariadb - site2'
+          from_port: '3306'
+          to_port: '3306'
+          proto: tcp
+          cidr_ip: 10.0.2.16/28
+        - rule_desc: 'state-transfer - site1 - mariadb'
           from_port: '4444'
           to_port: '4444'
           proto: tcp
-          cidr_ip: 10.0.0.0/16          
-        - rule_desc: 'wsrep - mariadb'
+          cidr_ip: 10.0.1.32/28
+        - rule_desc: 'state-transfer - site2 - mariadb'
+          from_port: '4444'
+          to_port: '4444'
+          proto: tcp
+          cidr_ip: 10.0.2.32/28
+        - rule_desc: 'wsrep - site1 - mariadb'
           from_port: '4567'
           to_port: '4567'
           proto: tcp
-          cidr_ip: 10.0.0.0/16
-
+          cidr_ip: 10.0.1.32/28
+        - rule_desc: 'wsrep - site2 - mariadb'
+          from_port: '4567'
+          to_port: '4567'
+          proto: tcp
+          cidr_ip: 10.0.2.32/28
 vm:
   - name: 'site1-loadbalancer'
     site: 'site1'
@@ -155,21 +189,25 @@ vm:
     role: 'rhsso'
     region: us-east-1
     subnet: "10.0.1.16/28"
+    type: 't3a.small'
   - name: 'site1-rhsso2'
     site: 'site1'
     role: 'rhsso'
     region: us-east-1
     subnet: "10.0.1.16/28"
+    type: 't3a.small'
   - name: 'site2-rhsso1'
     site: 'site2'
     role: 'rhsso'
     region: us-west-2
     subnet: "10.0.2.16/28"
+    type: 't3a.small'
   - name: 'site2-rhsso2'
     site: 'site2'
     role: 'rhsso'
     region: us-west-2
     subnet: "10.0.2.16/28"
+    type: 't3a.small'
 db_vm:
   - name: 'site1-database1'
     site: 'site1'
