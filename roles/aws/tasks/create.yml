@@ -66,21 +66,13 @@
         vpc_peering_connection_id: "{{ created_peering.peering_id }}"
     tags: "{{ resource_tags }}"
 
-# - name: Create a private DNS zone
-#   azure.azcollection.azure_rm_privatednszone:
-#     resource_group: "{{ item.name }}"
-#     name: "{{ privatednszone }}"
-#   loop: "{{ resource_groups }}"
-
-# - name: Update virtual network link
-#   azure.azcollection.azure_rm_privatednszonelink:
-#     resource_group: "{{ item.name }}"
-#     name: vn_ansible_middileware_link
-#     zone_name: "{{ privatednszone }}"
-#     virtual_network: "{{ virtualnetwork_name }}"
-#     registration_enabled: yes
-#     state: present
-#   loop: "{{ resource_groups }}"
+- name: Create a private DNS zone
+  community.aws.route53_zone:
+    zone: "{{ privatednszone }}"
+    vpc_id: '{{ item.value.vpc_id }}'
+    vpc_region: "{{ item.key }}"
+    tags: "{{ resource_tags }}"
+  loop: "{{ vpc_result | dict2items }}"
 
 # - name: Create public IP address for VM's
 #   azure_rm_publicipaddress:
@@ -90,35 +82,23 @@
 #     domain_name: "{{ item.domain_name | default(omit)}}"
 #   loop: "{{ vm }}"
 
-# - name: Create Virtual Machine
-#   azure_rm_virtualmachine:
-#     resource_group: "{{ item.resourcegroup_name }}"
-#     name: "{{ item.name }}"
-#     admin_username: "{{ admin_username }}"
-#     admin_password: "{{ admin_password }}"
-#     network_interface_names: "{{ item.name }}"
-#     ssh_public_keys:
-#     - path: "/home/{{ admin_username }}/.ssh/authorized_keys"
-#       key_data: "{{ ssh_key_path }}"
-#     vm_size: "{{ vm_size }}"
-#     tags:
-#       site: "{{ item.site | default(None) }}"
-#       role: "{{ item.role | default(None)}}"
-#     image:
-#       offer: "{{ offer }}"
-#       publisher: "{{ publisher }}"
-#       sku: "{{ sku }}"
-#       version: "{{ image_version }}"
-#   loop: "{{ vm }}"
+- set_fact:
+    vm_result: []
 
 - name: Create EC2 instances for services
   include_tasks: instance.yml
   loop: "{{ vm }}"
+  loop_control:
+    loop_var: instance
+    index_var: vm_idx
 
 - name: Create EC2 instances for unmanaged mariadb database
   when: not managed_mariadb
   include_tasks: instance.yml
   loop: "{{ db_vm }}"
+  loop_control:
+    loop_var: instance
+    index_var: vm_idx
 
 # - name: Install, configure and managed mariadb database
 #   block:
@@ -163,34 +143,4 @@
 #   azure_rm_dnszone:
 #     resource_group: "{{ item.name }}"
 #     name: "{{ dns_name }}"
-#   loop: "{{ resource_groups }}"
-
-# - name: Create a traffic manager profile
-#   azure.azcollection.azure_rm_trafficmanager:
-#     name: "{{ traffic_manager_name }}"
-#     resource_group: "{{ traffic_manager_resource_group }}"
-#     profile_status: "{{ profile_status }}"
-#     dns_config:
-#       relative_name: "{{ traffic_manager_name }}"
-#       ttl: "{{ ttl }}"
-#     monitor_config:
-#       protocol: "{{ protocol }}"
-#       port: "{{ port }}"
-#       path: "{{ path }}"
-#       timeout_in_seconds: "{{ timeout_in_seconds }}"
-#       interval_in_seconds: "{{ interval_in_seconds }}"
-#       tolerated_number_of_failures: "{{ tolerated_number_of_failures }}"
-#     endpoints: "{{ tm.value }}"
-#   loop: "{{ traffic_manager.groups | dict2items }}"
-#   loop_control:
-#     loop_var: tm
-
-# - name: Link public DNS to Traffic Manager.
-#   azure_rm_dnsrecordset:
-#     resource_group: "{{ item.name }}"
-#     relative_name: "{{ relative_name }}"
-#     zone_name: "{{ dns_name }}"
-#     record_type: "{{ record_type }}"
-#     records:
-#       - entry: "{{ entry }}"
 #   loop: "{{ resource_groups }}"

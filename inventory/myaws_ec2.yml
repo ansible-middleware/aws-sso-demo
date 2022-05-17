@@ -10,8 +10,9 @@ hostnames:
 leading_separator: no
 keyed_groups:
  - key: tags.Role
+ - key: tags.Site
  - key: placement.region
 # Ignores 403 errors rather than failing
 strict_permissions: False
 compose:
-  ansible_host: public_dns_name
+  ansible_host: public_ip_address

@@ -1,55 +1,10 @@
 argument_specs:
     main:
         options:
-            virtualnetwork_name:
-                # line 2 of aws/defaults/main.yml
-                required: true
-                description: "Name of the network interface."
-                type: "str"
-            subnet_name:
-                # line 3 of aws/defaults/main.yml
-                required: true
-                description: "Name of the subnet network interface."
-                type: "str"
-            securitygroup_name:
-                # line 4 of aws/defaults/main.yml
-                required: true
-                description: "Unique name for the rule."
-                type: "str"
-            admin_username:
-                # line 5 of aws/defaults/main.yml
-                required: true
-                description: "aws VM username."
-                type: "str"
-            admin_password:
-                # line 6 of aws/defaults/main.yml
-                required: true
-                description: "aws VM password."
-                type: "str"
-            offer:
-                # line 7 of aws/defaults/main.yml
-                required: true
-                description: "The image used to build the VM."
-                type: "str"
-            publisher:
-                # line 8 of aws/defaults/main.yml
-                required: true
-                description: "VM image publisher"
-                type: "str"
-            sku:
-                # line 9 of aws/defaults/main.yml
-                required: true
-                description: "VM image SKU"
-                type: "str"
             image_version:
                 # line 10 of aws/defaults/main.yml
                 required: true
                 description: "Verison of the Image"
-                type: "str"
-            vm_size:
-                # line 11 of aws/defaults/main.yml
-                required: true
-                description: "A valid aws VM size value. Choices vary depending on the subscription and location. Check your subscription for available choices."
                 type: "str"
             publicIP:
                 # line 12 of aws/defaults/main.yml
@@ -71,11 +26,6 @@ argument_specs:
                 required: true
                 description: "Name of the private DNS zone."
                 type: "str"
-            vn_peering_name:
-                # line 16 of aws/defaults/main.yml
-                required: true
-                description: "Name of the VM Peering"
-                type: "str"
             allow_virtual_network_access:
                 # line 17 of aws/defaults/main.yml
                 default: true
@@ -86,26 +36,6 @@ argument_specs:
                 default: true
                 description: "Allows forwarded traffic from the VMs in the remote VNet."
                 type: "bool"
-            traffic_manager_name:
-                # line 31 of aws/defaults/main.yml
-                required: true
-                description: "Name of the Traffic Manager profile."
-                type: "str"
-            traffic_manager_resource_group:
-                # line 32 of aws/defaults/main.yml
-                required: true
-                description: "Name of a resource group where the Traffic Manager profile exists or will be created."
-                type: "str"
-            profile_status:
-                # line 33 of aws/defaults/main.yml
-                required: true
-                description: "The status of the Traffic Manager profile."
-                type: "str"
-            traffic_manager_relative_name:
-                # line 34 of aws/defaults/main.yml
-                required: true
-                description: "The relative DNS name provided by this Traffic Manager profile."
-                type: "str"
             ttl:
                 # line 35 of aws/defaults/main.yml
                 required: true
@@ -116,26 +46,6 @@ argument_specs:
                 default: "HTTPS"
                 description: "The protocol (HTTP, HTTPS or TCP) used to probe for endpoint health."
                 type: "str"
-            port:
-                # line 37 of aws/defaults/main.yml
-                required: true
-                description: "The TCP port used to probe for endpoint health."
-                type: "int"
-            path:
-                # line 38 of aws/defaults/main.yml
-                required: true
-                description: "The path relative to the endpoint domain name used to probe for endpoint health."
-                type: "str"
-            timeout_in_seconds:
-                # line 39 of aws/defaults/main.yml
-                required: true
-                description: "The monitor timeout for endpoints in this profile."
-                type: "int"
-            interval_in_seconds:
-                # line 40 of aws/defaults/main.yml
-                required: true
-                description: "The monitor interval for endpoints in this profile."
-                type: "int"
             tolerated_number_of_failures:
                 # line 41 of aws/defaults/main.yml
                 default: 3
@@ -160,11 +70,6 @@ argument_specs:
                 # line 46 of aws/defaults/main.yml
                 required: false
                 description: "Name of the public DNS"
-                type: "str"
-            loadbalancer_ip:
-                # line 47 of aws/defaults/main.yml
-                required: true
-                description: "Provide the loadbalancer ip to associate the CNAME"
                 type: "str"
             vpc:
                 # line 49 of aws/defaults/main.yml

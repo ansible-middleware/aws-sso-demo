@@ -37,9 +37,9 @@ rhn_password: '<password>'
 
 2. Execute the main play:
 ```
-ansible-playbook -e @rhn-creds.yml -i cross-dc-rhsso-demo/myaws_ec2.yml -i cross-dc-rhsso-demo/group_vars/all.yml -e "ansible_ssh_user=ec2user ansible_ssh_private_key_file='provide_your_ssh_private_key'" create-demo-setup.yml
+ansible-playbook -e @rhn-creds.yml infra.yml
 ```
-Note: Replace `provide_your_ssh_private_key` with ssh private key file.
+Note: open `ansible.cfg` config file and edit `remote_user` and `remote_privkey` accordingly to your configuration.
 
 ## Security considerations
 

@@ -1,50 +1,16 @@
 ---
-virtualnetwork_name: ansible-middileware-vn
-subnet_name: ansible-middileware-subnet
-securitygroup_name: ansible-middileware-sg
 admin_username: ec2user 
 admin_password: Password12345
-offer: RHEL
-publisher: RedHat
-sku: 8-LVM
 image_version: "latest"
-vm_size: "Standard_D2s_v3"
 publicIP: ansible-middileware-ip
 public_ip_address_name: ansible-middileware-public-ip
 domain_name: "rhsso"
 privatednszone: "internal.ansiblemiddleware.com"
-vn_peering_name: "eastus-centralus-peering"
-allow_virtual_network_access: true
-allow_forwarded_traffic: true
-# Traffic Manager info
-traffic_manager:
-      groups:
-        endpoints:
-        - name: site1
-          type: "Microsoft.Network/trafficManagerProfiles/azureEndpoints"
-          endpoint_status: Enabled
-          target_resource_id : "/subscriptions/fcb01633-9799-4410-9ec8-f632c867b0f3/resourceGroups/ansible-middileware-eastus-rg/providers/Microsoft.Network/publicIPAddresses/site1-loadbalancer-ip"
-        - name: site2
-          type: "Microsoft.Network/trafficManagerProfiles/azureEndpoints"
-          endpoint_status: Enabled
-          target_resource_id : "/subscriptions/fcb01633-9799-4410-9ec8-f632c867b0f3/resourceGroups/ansible-middileware-centralus-rg/providers/Microsoft.Network/publicIPAddresses/site2-loadbalancer-ip"
-traffic_manager_name: rhsso-ansible-middleware
-traffic_manager_resource_group: ansible-middileware-eastus-rg
-profile_status: Enabled
-traffic_manager_relative_name: rhsso-ansible-middleware
-ttl: 60
-protocol: HTTPS
-port: 443
-path: '/'
-timeout_in_seconds: 10
-interval_in_seconds: 30
-tolerated_number_of_failures: 3
 #Link public DNS to loadbalancr
 relative_name: "rhsso"
 record_type: "CNAME"
 entry: "rhsso-ansible-middleware.trafficmanager.net"
 dns_name: "awsdemos.ansiblemiddleware.com"
-loadbalancer_ip: "loadbalancer0-ip"
 # vpc with subnet per region
 vpc:
   us-east-1:
@@ -237,10 +203,12 @@ db_version: '10.2'
 db_admin_username: 'keycloak-user'
 db_admin_password: 'redhat1!'
 
-
+# Everything that supports tagging will be tagged at least with these:
 resource_tags:
   Environment: crossdc-rhsso-demo
   Application: rhsso
   Created-By: ansible
 
 ssh_key_name: guido
+
+ttl: 120
