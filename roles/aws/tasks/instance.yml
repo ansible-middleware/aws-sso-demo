@@ -31,7 +31,7 @@
       "tag:Name": "{{ instance.name }}"
       instance-state-name: [ "running", "pending" ]
   retries: 3
-  delay: 5
+  delay: 10
   until: running_instance.instances[0].private_ip_address is defined
   register: running_instance
 

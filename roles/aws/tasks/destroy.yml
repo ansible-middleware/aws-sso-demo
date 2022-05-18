@@ -49,3 +49,12 @@
     type: "{{ item.set.type }}"
     value: "{{ item.set.value }}"
   loop: "{{ rec.results }}"
+  when: item.set is defined and item.set | length > 0
+
+- name: "Include networking teardown"
+  include_tasks: destroy_net.yml
+  when: destroy_networking
+  loop: "{{ vpc | dict2items }}"
+  vars:
+    region: "{{ item.key }}"
+    vpc_data: "{{ item.value }}"

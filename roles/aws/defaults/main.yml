@@ -250,3 +250,4 @@ resource_tags:
 ssh_key_name: guido
 
 ttl: 60
+destroy_networking: True
