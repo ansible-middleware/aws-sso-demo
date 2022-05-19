@@ -169,21 +169,25 @@ vm:
     role: 'datagrid'
     region: us-east-1
     subnet: "10.0.1.16/28"
+    type: 't2.small'
   - name: 'site1-datagrid2'
     site: 'site1'
     role: 'datagrid'
     region: us-east-1
     subnet: "10.0.1.16/28"
+    type: 't2.small'
   - name: 'site2-datagrid1'
     site: 'site2'
     role: 'datagrid'
     region: us-west-2
     subnet: "10.0.2.16/28"
+    type: 't2.small'
   - name: 'site2-datagrid2'
     site: 'site2'
     role: 'datagrid'
     region: us-west-2
     subnet: "10.0.2.16/28"
+    type: 't2.small'
   - name: 'site1-rhsso1'
     site: 'site1'
     role: 'rhsso'
@@ -250,4 +254,4 @@ resource_tags:
 ssh_key_name: guido
 
 ttl: 60
-destroy_networking: True
+destroy_networking: False
