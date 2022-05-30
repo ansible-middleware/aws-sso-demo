@@ -5,8 +5,6 @@
   vars:
     repo_url: "https://github.com/ansible-middleware/cross-dc-rhsso-demo.git"
     branch: aws
-    rhn_username: foo
-    rhn_password: bar
   tasks:
     - name: Git checkout
       ansible.builtin.git:
